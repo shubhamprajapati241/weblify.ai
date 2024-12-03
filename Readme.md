@@ -23,6 +23,8 @@
 7. Install some more packages
    - npm i --save-dev @types/node
    - npm install dotenv
+8. Install express
+   - npm install @types/express express
 
 ### Antropic Resources
 
