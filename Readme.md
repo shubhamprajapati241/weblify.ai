@@ -30,3 +30,9 @@
 
 - https://docs.anthropic.com/en/api/getting-started
 - https://docs.anthropic.com/en/api/messages-streaming
+- https://console.anthropic.com/settings/billing
+
+## To run backend
+
+1. `npm install`
+2. `npm run dev`
