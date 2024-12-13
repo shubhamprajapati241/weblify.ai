@@ -11,20 +11,24 @@ import { StepsList } from "../components/StepList";
 import { TabView } from "../components/TabView";
 import { useWebContainer } from "../hooks/useWebContainer";
 import { PreviewFrame } from "../components/PreviewFrame";
+import { Loader } from "lucide-react";
 
-export function BuilderPage() {
+interface BuilderProps {
+  files: FileItem[];
+  setFiles: (files: FileItem[]) => void;
+}
+
+export function BuilderPage({ files, setFiles }: BuilderProps) {
   useInitializeProject();
 
   const location = useLocation();
   const webContainer = useWebContainer();
   const { task } = location.state as { task: string };
 
-  // const [loading, setLoading] = useState(false);
-  // const [template, setTemplate] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  const [templateSet, setTemplateSet] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
   const [followUpPrompt, setFollowUpPrompt] = useState("");
-
   const [llmMessages, setLlmMessages] = useState<
     {
       role: "user" | "assistant";
@@ -34,7 +38,6 @@ export function BuilderPage() {
 
   console.log(llmMessages);
 
-  const [files, setFiles] = useState<FileItem[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
 
@@ -165,6 +168,7 @@ export function BuilderPage() {
     const response = await axios.post(`${BACKEND_URL}/api/template`, {
       prompt: task,
     });
+    setTemplateSet(true);
     console.log(response.data);
     const { prompts, uiPrompts } = response.data;
 
@@ -174,7 +178,7 @@ export function BuilderPage() {
         status: "pending",
       }))
     );
-    // setLoading(true);
+    setLoading(true);
 
     const stepsResponse = await axios.post(`${BACKEND_URL}/api/chat`, {
       messages: [...task, prompts].map((content) => ({
@@ -182,7 +186,7 @@ export function BuilderPage() {
         content,
       })),
     });
-    // setLoading(false);
+    setLoading(false);
 
     setSteps((s) => [
       ...s,
@@ -210,35 +214,39 @@ export function BuilderPage() {
   }, []);
 
   async function followUp() {
-    const newMessage = {
-      role: "user" as "user",
-      content: followUpPrompt,
-    };
+    if (followUpPrompt != "") {
+      const newMessage = {
+        role: "user" as "user",
+        content: followUpPrompt,
+      };
+      setFollowUpPrompt("");
+      setLoading(true);
+      const stepsResponse = await axios.post(`${BACKEND_URL}/api/chat`, {
+        messages: [...llmMessages, newMessage].map((content) => ({
+          role: "user",
+          content,
+        })),
+      });
+      setLoading(false);
 
-    const stepsResponse = await axios.post(`${BACKEND_URL}/api/chat`, {
-      messages: [...llmMessages, newMessage].map((content) => ({
-        role: "user",
-        content,
-      })),
-    });
+      setLlmMessages((x) => [...x, newMessage]);
 
-    setLlmMessages((x) => [...x, newMessage]);
-
-    setLlmMessages((x) => [
-      ...x,
-      {
-        role: "assistant",
-        content: stepsResponse.data.resonse,
-      },
-    ]);
-
-    setSteps((s) => [
-      ...s,
-      ...parseXml(stepsResponse.data.response).map((x) => ({
+      setLlmMessages((x) => [
         ...x,
-        status: "pending" as "pending",
-      })),
-    ]);
+        {
+          role: "assistant",
+          content: stepsResponse.data.resonse,
+        },
+      ]);
+
+      setSteps((s) => [
+        ...s,
+        ...parseXml(stepsResponse.data.response).map((x) => ({
+          ...x,
+          status: "pending" as "pending",
+        })),
+      ]);
+    }
   }
 
   return (
@@ -249,20 +257,27 @@ export function BuilderPage() {
             <div className="max-h-[75vh] overflow-scroll">
               <StepsList steps={steps} currentStep={1} onStepClick={() => {}} />
             </div>
-            <div className="flex">
-              <textarea
-                className="p-2 w-full"
-                onChange={(e) => {
-                  setFollowUpPrompt(e.target.value);
-                }}
-              ></textarea>
-              <button
-                className="bg-purple-200 text-black"
-                onClick={() => followUp()}
-              >
-                Send
-              </button>
-            </div>
+            {(loading || !templateSet) && <Loader />}
+            {(!loading || !templateSet) && (
+              <div className="flex w-full p-2 mt-5 rounded-lg shadow-md">
+                <input
+                  type="text"
+                  className="flex-1 p-2 bg-white text-indigo-600 border border-gray-300 rounded-l-lg text-sm outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  placeholder="Type your message..."
+                  onChange={(e) => {
+                    if (e.target.value.trim() !== "") {
+                      setFollowUpPrompt(e.target.value);
+                    }
+                  }}
+                />
+                <button
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-r-lg hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-200 ease-in-out text-sm dark:bg-indigo-700 dark:hover:bg-indigo-600"
+                  onClick={followUp}
+                >
+                  Send
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="col-span-1">

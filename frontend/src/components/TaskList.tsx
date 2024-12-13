@@ -1,4 +1,3 @@
-import React from "react";
 import { CheckCircle2, Circle, Timer } from "lucide-react";
 import { useProjectStore } from "../store/projectStore";
 import { ProjectTask } from "../types";
