@@ -1,22 +1,23 @@
-import React, { useEffect, useRef } from 'react';
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-json';
-import { useProjectStore } from '../store/projectStore';
+import { useEffect, useRef } from "react";
+import Prism from "prismjs";
+import "prismjs/themes/prism-tomorrow.css";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-css";
+import "prismjs/components/prism-json";
+import { FileItem } from "../types";
 
-export function FilePreview() {
-  const { selectedFile } = useProjectStore();
+interface CodeEditorProps {
+  selectedFile: FileItem | null;
+}
+
+export function FilePreview({ selectedFile }: CodeEditorProps) {
   const codeRef = useRef<HTMLElement>(null);
-
   useEffect(() => {
     if (codeRef.current) {
       Prism.highlightElement(codeRef.current);
     }
   }, [selectedFile]);
-
   if (!selectedFile) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500">
@@ -24,24 +25,22 @@ export function FilePreview() {
       </div>
     );
   }
-
   const getLanguage = (type: string) => {
     switch (type) {
-      case 'javascript':
-        return 'javascript';
-      case 'typescript':
-        return 'typescript';
-      case 'css':
-        return 'css';
-      case 'json':
-        return 'json';
+      case "javascript":
+        return "javascript";
+      case "typescript":
+        return "typescript";
+      case "css":
+        return "css";
+      case "json":
+        return "json";
       default:
-        return 'javascript';
+        return "javascript";
     }
   };
-
   return (
-    <div className="h-full p-4">
+    <div className="h-full w-full">
       <div className="bg-gray-800 rounded-lg p-4 h-full overflow-auto">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-400">

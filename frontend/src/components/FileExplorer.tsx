@@ -1,39 +1,84 @@
-import React from "react";
-import { FolderOpen, File } from "lucide-react";
-import { useProjectStore } from "../store/projectStore";
-import { ProjectFile } from "../types";
+import { useState } from "react";
+import { File, FolderTree, ChevronDown, ChevronRight } from "lucide-react";
+// import { useProjectStore } from "../store/projectStore";
+import { FileItem } from "../types";
 
-export function FileExplorer() {
-  const { currentProject, selectedFile, setSelectedFile } = useProjectStore();
+interface FileExplorerProps {
+  files: FileItem[];
+  onFileSelect: (file: FileItem) => void;
+}
 
-  const handleFileClick = (file: ProjectFile) => {
-    setSelectedFile(file);
-  };
+interface FileNodeProps {
+  item: FileItem;
+  depth: number;
+  onFileClick: (file: FileItem) => void;
+}
 
-  const getFileIcon = (type: ProjectFile["type"]) => {
-    return <File className="w-4 h-4 mr-2" />;
+function FileNode({ item, depth, onFileClick }: FileNodeProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleClick = () => {
+    if (item.type === "folder") {
+      setIsExpanded(!isExpanded);
+    } else {
+      onFileClick(item);
+    }
   };
 
   return (
-    <div className="h-full bg-gray-900 border-x border-gray-800 p-4">
-      <div className="flex items-center mb-4">
-        <FolderOpen className="w-5 h-5 text-indigo-500 mr-2" />
-        <h2 className="text-lg font-semibold">FileExplorer</h2>
+    <div className="select-none">
+      <div
+        className="flex items-center gap-2 p-2 hover:bg-gray-800 rounded-md cursor-pointer"
+        style={{ paddingLeft: `${depth * 1.5}rem` }}
+        onClick={handleClick}
+      >
+        {item.type === "folder" && (
+          <span className="text-gray-400">
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </span>
+        )}
+        {item.type === "folder" ? (
+          <FolderTree className="w-4 h-4 text-blue-400" />
+        ) : (
+          <File className="w-4 h-4 text-gray-400" />
+        )}
+        <span className="text-gray-200">{item.name}</span>
       </div>
-      <div className="space-y-2">
-        {currentProject?.files.map((file) => (
-          <button
-            key={file.id}
-            onClick={() => handleFileClick(file)}
-            className={`w-full flex items-center p-2 rounded-lg transition-colors ${
-              selectedFile?.id === file.id
-                ? "bg-indigo-500 text-white"
-                : "hover:bg-gray-800"
-            }`}
-          >
-            {getFileIcon(file.type)}
-            <span className="text-sm">{file.name}</span>
-          </button>
+      {item.type === "folder" && isExpanded && item.children && (
+        <div>
+          {item.children.map((child, index) => (
+            <FileNode
+              key={`${child.path}-${index}`}
+              item={child}
+              depth={depth + 1}
+              onFileClick={onFileClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function FileExplorer({ files, onFileSelect }: FileExplorerProps) {
+  return (
+    <div className="bg-gray-900 rounded-lg shadow-lg p-4 h-full overflow-auto">
+      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-100">
+        <FolderTree className="w-5 h-5" />
+        File Explorer
+      </h2>
+      <div className="space-y-1">
+        {files.map((file, index) => (
+          <FileNode
+            key={`${file.path}-${index}`}
+            item={file}
+            depth={0}
+            onFileClick={onFileSelect}
+          />
         ))}
       </div>
     </div>
