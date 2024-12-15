@@ -2,12 +2,13 @@
 
 **Weblify.ai** is an intelligent platform that leverages AI to help users easily create and customize websites. By utilizing modern technologies and AI-based workflows, Weblify.ai simplifies the web development process, making it accessible for both developers and non-developers.
 
-![weblify.ai](weblify.png)
+![weblify.ai](assets/weblify.png)
 
 ## Architecure Flow
 
-![Porject Flow](flow.png)
+![Porject Flow](assets/flow.png)
 
+### Demo Video - https://vimeo.com/1039372173
 ---
 
 ## Table of Contents
